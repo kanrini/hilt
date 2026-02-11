@@ -72,7 +72,7 @@ hilt 시 119 -l
 
 ## 모듈 관리 (Module Management)
 
-Hilt는 엔진일 뿐입니다. 연료(성경 데이터)가 없으면 깡통이니 `installmgr`로 설치해 주세요.
+Hilt는 엔진일 뿐입니다. 성경 데이터가 없으면 깡통이니 `installmgr`로 설치해 주세요.
 
 ```bash
 # 리스트 갱신
@@ -86,11 +86,9 @@ sudo installmgr -ri CrossWire KorRV  # 한국어 (개역한글)
 
 ## 구조 (Architecture)
 
-관심사의 분리(Separation of concerns). 심플합니다.
-
-- `src/main.c`: **두뇌** (CLI 파싱, 메인 로직, C23)
-- `src/bridge.cpp`: **근육** (`libsword`와 통신, C++17)
-- `include/bridge.h`: **통역** (C 호환성을 위한 포인터 정의)
+- `src/main.c`: CLI 파싱, 메인 로직, C23
+- `src/bridge.cpp`: `libsword`와 통신, C++17
+- `include/bridge.h`: C 호환성을 위한 포인터 정의
 
 ## 라이선스
 
