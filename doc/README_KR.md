@@ -6,7 +6,7 @@
 
 **Hilt**는 [CrossWire SWORD Project](https://crosswire.org/sword/index.jsp)를 기반으로 만든 **초경량 CLI 성경 리더**입니다.
 
-성경 한 구절 읽는데 무거운 GUI 프로그램 띄우기 싫어서 만들었습니다. **C (C23)**와 **C++17**을 사용해 그냥 빠릅니다.
+성경 한 구절 읽는데 무거운 GUI 프로그램 띄우기 싫어서 만들었습니다. **C**와 **C++17**을 사용해 그냥 빠릅니다.
 
 ## 특징 (Features)
 
