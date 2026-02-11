@@ -8,6 +8,8 @@
 
 I hate bloated GUI apps, so I made this. It bridges modern **C (C23)** and **C++17** to give you raw speed. No nonsense, just scripture in your terminal.
 
+[한국어 리드미](https://github.com/kanrini/hilt/blob/main/doc/README_KR.md)
+
 ## Features
 
 - **Speed**: Native C23 with a thin C++17 layer. It flies.
@@ -75,7 +77,7 @@ hilt Ps 119 -l
 
 ## Module Management
 
-Hilt is just the engine. You need fuel (Bible modules). Use `installmgr`.
+Hilt is just the engine. You need Bible modules. Use `installmgr`.
 
 ```bash
 # Init
@@ -91,9 +93,9 @@ sudo installmgr -ri CrossWire KorRV  # Korean
 
 Separation of concerns. Simple as that.
 
-- `src/main.c`: The Brain (CLI parsing, C23).
-- `src/bridge.cpp`: The Muscle (Talks to libsword, C++17).
-- `include/bridge.h`: The Translator (Opaque pointers).
+- `src/main.c`: CLI parsing, C23.
+- `src/bridge.cpp`: Talks to libsword, C++17.
+- `include/bridge.h`: Opaque pointers.
 
 ## License
 
