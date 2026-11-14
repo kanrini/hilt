@@ -9,7 +9,7 @@ sword_source="$PWD/build/sword-$version"
 sword_prefix="$PWD/build/sword-prefix"
 sword_install_prefix="$sword_prefix"
 sword_no_curl=Yes
-if [[  == UCRT64 ]]; then
+if [[ ${MSYSTEM:-} == UCRT64 ]]; then
     sword_no_curl=No
     sword_install_prefix="$(cygpath -m "$sword_prefix")"
     # SWORD 1.9.0 casts pointers to unsigned long, which is 32-bit on Win64.
