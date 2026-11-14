@@ -67,8 +67,8 @@ jobs:
           export SWORD_PATH="$PWD/../sword-data"
           /usr/bin/hilt KJV John 3:16 | tee english.log
           /usr/bin/hilt KJV '요' 3:16 | tee korean.log
-          grep -qE ':16 .*God' english.log
-          grep -qE ':16 .*God' korean.log
+          awk '/^:16[[:space:]]/ { verse = 1 } verse && /God/ { found = 1 } END { exit !found }' english.log
+          diff -u <(tail -n +2 english.log) <(tail -n +2 korean.log)
       - uses: actions/upload-artifact@v4
         with:
           name: arch-x86_64
@@ -114,7 +114,7 @@ jobs:
           & $hilt -s KJV
           if ($LASTEXITCODE -ne 0) { throw 'Could not save the default module' }
           $verse = & $hilt '요' '3:16'
-          if ($LASTEXITCODE -ne 0 -or ($verse -join " ") -notmatch ':16 .*God') {
+          if ($LASTEXITCODE -ne 0 -or ($verse -join " ") -notmatch ':16\s+.*God') {
             throw "Installed CLI failed to read a Korean reference: $verse"
           }
       - uses: actions/upload-artifact@v4

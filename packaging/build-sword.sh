@@ -11,6 +11,12 @@ sword_install_prefix="$sword_prefix"
 if [[ ${MSYSTEM:-} == UCRT64 ]]; then
     sword_install_prefix="$(cygpath -m "$sword_prefix")"
     # SWORD 1.9.0 casts pointers to unsigned long, which is 32-bit on Win64.
+    for filter in "$sword_source"/src/modules/filters/*.cpp; do
+        if grep -qF '(unsigned long)key' "$filter"; then
+            sed -i '1i#include <cstdint>' "$filter"
+            sed -i 's/(unsigned long)key/reinterpret_cast<std::uintptr_t>(key)/g' "$filter"
+        fi
+    done
     sed -i 's/(unsigned long)datfd > 0/datfd != nullptr/; s/(unsigned long)idxfd > 0/idxfd != nullptr/' "$sword_source/src/modules/common/rawstr4.cpp"
 fi
 sword_options=(
