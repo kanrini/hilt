@@ -36,22 +36,23 @@ Download the x86-64 installer for your system from [GitHub Releases](https://git
 sudo pacman -U ./hilt-<version>-1-x86_64.pkg.tar.zst
 ```
 
-The package includes the SWORD engine. Install a Bible module from [CrossWire](https://crosswire.org/sword/modules/ModDisp.jsp?modType=Bibles) by extracting its ZIP into ~/.sword, with mods.d and modules directly inside.
+The package includes the SWORD engine. Use the module installation commands below to add a Bible.
 
 ### Windows
 
-Run `hilt-<version>-windows-x86_64-setup.exe` and select the option to add Hilt to PATH. Open a new PowerShell window after installation. The installer includes the SWORD runtime and locale data. Download a Bible module separately from [CrossWire](https://crosswire.org/sword/modules/ModDisp.jsp?modType=Bibles).
+Run `hilt-<version>-windows-x86_64-setup.exe` and select the option to add Hilt to PATH. Open a new PowerShell window after installation. The installer includes the SWORD runtime and locale data.
 
-```powershell
-$moduleDir = Join-Path $env:USERPROFILE 'sword'
-Expand-Archive .\KJV.zip -DestinationPath $moduleDir
-[Environment]::SetEnvironmentVariable('SWORD_PATH', $moduleDir, 'User')
-$env:SWORD_PATH = $moduleDir
-hilt -s KJV
-hilt John 3:16
+### Installing a Bible module
+
+```sh
+hilt --install KJV
+hilt -i KorRV
 ```
 
-Keep the extracted `mods.d` and `modules` directories directly under `$moduleDir`.
+Use the exact CrossWire module ID. Hilt downloads the module into `~/.hilt/modules` and selects it as the default. Queries work offline after installation. `hilt -s KJV` searches Hilt's module directory first, then any existing SWORD installation, including `SWORD_PATH`.
+### Updating Hilt
+
+Run `hilt update` to check GitHub Releases. On Arch Linux it runs pacman, using sudo when needed. On Windows it opens the installer so you can finish the update. Install a release that includes this command before using it.
 
 ### Publishing a release
 

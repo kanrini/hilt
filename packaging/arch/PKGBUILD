@@ -6,7 +6,7 @@ arch=('x86_64')
 url='https://github.com/kanrini/hilt'
 license=('MIT' 'GPL-2.0-only')
 options=('!debug')
-depends=('icu' 'zlib' 'gcc-libs' 'glibc')
+depends=('icu' 'zlib' 'curl' 'libarchive' 'gcc-libs' 'glibc')
 
 package() {
     install -d "$pkgdir/usr/lib/hilt" "$pkgdir/usr/share/hilt"

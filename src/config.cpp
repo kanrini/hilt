@@ -5,7 +5,6 @@
 #include <filesystem>
 #include <fstream>
 
-namespace {
 std::optional<std::filesystem::path> config_directory() {
 #ifdef _WIN32
     const wchar_t* home = _wgetenv(L"HOME");
@@ -16,7 +15,6 @@ std::optional<std::filesystem::path> config_directory() {
     if (!home || !*home) return std::nullopt;
     return std::filesystem::path(home) / ".hilt";
 }
-} // namespace
 
 bool save_default_module(const char* module_name) {
     const auto directory = config_directory();

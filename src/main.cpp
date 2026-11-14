@@ -1,4 +1,5 @@
 #include "config.h"
+#include "install.h"
 #include "query.h"
 
 #include <cstdio>
@@ -17,11 +18,15 @@
 #include <vector>
 #endif
 
+#ifndef HILT_BUILD_VERSION
+#define HILT_BUILD_VERSION "0.0.0"
+#endif
+
 namespace {
 constexpr auto COLOR_CYAN = "\033[1;36m";
 constexpr auto COLOR_RESET = "\033[0m";
 void print_usage(const char* prog_name) {
-    printf("  Hilt: The Sword Interface (v1.0.0)\n");
+    printf("  Hilt: The Sword Interface (v" HILT_BUILD_VERSION ")\n");
     printf("  A lightweight CLI Bible reader based on the SWORD Project.\n\n");
 
     printf("  Usage:\n");
@@ -33,7 +38,9 @@ void print_usage(const char* prog_name) {
     printf("    REFERENCE    Target scripture (Book Chapter:Verse).\n");
     printf("                 Supports standard abbreviations and ranges.\n\n");
 
+    printf("    %s update   Update Hilt from GitHub Releases.\n\n", prog_name);
     printf("  Options:\n");
+    printf("    -i, --install <VERSION> Install from CrossWire and set as default.\n");
     printf("    -s <VERSION> Set the default Bible version permanently (saved to ~/.hilt/config).\n");
     printf("    -l           List mode: Display verse numbers only (useful for overview).\n");
 
@@ -84,20 +91,38 @@ int run(int argc, const char* const* argv) {
     }
 
     const std::string_view first_arg = argv[1];
+    if (first_arg == "update" && argc == 2) return update_hilt() ? EXIT_SUCCESS : EXIT_FAILURE;
     if (first_arg == "-s" && argc < 3) {
         std::fprintf(stderr, "Error: Missing version name.\n");
         return EXIT_FAILURE;
     }
 
-    sword::SWMgr manager;
+    if (first_arg == "-i" || first_arg == "--install") {
+        if (argc != 3) {
+            std::fprintf(stderr, "Usage: %s --install <VERSION>\n", argv[0]);
+            return EXIT_FAILURE;
+        }
+        return install_module(argv[2]) ? EXIT_SUCCESS : EXIT_FAILURE;
+    }
+
+    std::unique_ptr<sword::SWMgr> internal;
+    std::unique_ptr<sword::SWMgr> external;
+    const auto find_module = [&](const char* name) {
+        internal = open_installed_module(name);
+        if (internal) return internal->getModule(name);
+        if (!external) external = std::make_unique<sword::SWMgr>();
+        return external->getModule(name);
+    };
+
     if (first_arg == "-s") {
-        if (!manager.getModule(argv[2])) {
-            std::fprintf(stderr, "Warning: Module '%s' is not currently installed.\n", argv[2]);
+        if (!find_module(argv[2])) {
+            std::fprintf(stderr, "Error: Module '%s' is not installed. Use --install to download it.\n", argv[2]);
+            return EXIT_FAILURE;
         }
         return save_default_module(argv[2]) ? EXIT_SUCCESS : EXIT_FAILURE;
     }
 
-    auto* module = manager.getModule(argv[1]);
+    auto* module = find_module(argv[1]);
     const bool explicit_version = module != nullptr;
     const std::string version = explicit_version ? argv[1] : load_default_module().value_or("KJV");
 
@@ -116,7 +141,7 @@ int run(int argc, const char* const* argv) {
         return EXIT_FAILURE;
     }
 
-    if (!explicit_version) module = manager.getModule(version.c_str());
+    if (!explicit_version) module = find_module(version.c_str());
 
     std::printf("%s[%s] %s%s\n", COLOR_CYAN, version.c_str(), reference.c_str(), COLOR_RESET);
 

@@ -34,22 +34,23 @@
 sudo pacman -U ./hilt-<버전>-1-x86_64.pkg.tar.zst
 ```
 
-패키지에 SWORD 엔진이 포함됩니다. 성경 모듈 ZIP을 [CrossWire](https://crosswire.org/sword/modules/ModDisp.jsp?modType=Bibles)에서 받아 `~/.sword`에 푸세요. 압축을 풀면 해당 폴더 바로 아래에 `mods.d`와 `modules`가 있어야 합니다.
+패키지에 SWORD 엔진이 포함됩니다. 성경은 아래 명령으로 추가하세요.
 
 ### Windows
 
-`hilt-<버전>-windows-x86_64-setup.exe`를 실행하고 PATH 추가 옵션을 선택한 뒤 새 PowerShell 창을 여세요. 설치 파일에는 SWORD 런타임과 언어 데이터가 포함됩니다. 성경 모듈 ZIP은 [CrossWire](https://crosswire.org/sword/modules/ModDisp.jsp?modType=Bibles)에서 별도로 받으세요.
+`hilt-<버전>-windows-x86_64-setup.exe`를 실행하고 PATH 추가 옵션을 선택한 뒤 새 PowerShell 창을 여세요. 설치 파일에는 SWORD 런타임과 언어 데이터가 포함됩니다.
 
-```powershell
-$moduleDir = Join-Path $env:USERPROFILE 'sword'
-Expand-Archive .\KJV.zip -DestinationPath $moduleDir
-[Environment]::SetEnvironmentVariable('SWORD_PATH', $moduleDir, 'User')
-$env:SWORD_PATH = $moduleDir
-hilt -s KJV
-hilt John 3:16
+### 성경 모듈 설치
+
+```sh
+hilt --install KJV
+hilt -i KorRV
 ```
 
-압축을 풀면 `$moduleDir` 바로 아래에 `mods.d`와 `modules` 폴더가 있어야 합니다.
+CrossWire 모듈 ID를 정확히 입력하세요. Hilt는 성경을 `~/.hilt/modules`에 저장하고 기본 버전으로 지정합니다. 설치 후에는 오프라인에서 읽을 수 있습니다. `hilt -s KJV`는 Hilt 내부 모듈부터 확인하고, 없으면 `SWORD_PATH`를 포함한 기존 SWORD 설치에서 찾습니다.
+### Hilt 업데이트
+
+`hilt update`를 실행하면 GitHub Releases에서 최신 버전을 확인합니다. Arch Linux에서는 필요할 때 sudo로 pacman을 실행합니다. Windows에서는 설치 프로그램을 열며, 설치 화면에서 업데이트를 마칠 수 있습니다. 이 명령을 사용하려면 먼저 명령이 포함된 릴리스 버전을 설치해야 합니다.
 
 ### 릴리스 게시
 

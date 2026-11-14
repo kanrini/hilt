@@ -38,7 +38,7 @@ jobs:
     env:
       HILT_VERSION: ${{ needs.version.outputs.value }}
     steps:
-      - run: pacman -Syu --noconfirm --needed git cmake ninja icu zlib curl unzip
+      - run: pacman -Syu --noconfirm --needed git cmake ninja icu zlib curl libarchive unzip
       - uses: actions/checkout@v4
       - name: Build, test and package
         shell: bash
@@ -46,7 +46,7 @@ jobs:
           set -euo pipefail
           source packaging/build-sword.sh
           export PKG_CONFIG_PATH="$sword_prefix/lib/pkgconfig"
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DHILT_BUNDLED_SWORD=ON
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DHILT_BUNDLED_SWORD=ON -DHILT_VERSION="$HILT_VERSION"
           cmake --build build
           curl --fail --location --retry 3 https://crosswire.org/ftpmirror/pub/sword/packages/rawzip/KJV.zip -o build/KJV.zip
           mkdir -p build/sword-data
@@ -71,6 +71,13 @@ jobs:
           /usr/bin/hilt KJV '요' 3:16 | tee korean.log
           awk '/^:16[[:space:]]/ { verse = 1 } verse && /God/ { found = 1 } END { exit !found }' english.log
           diff -u <(tail -n +2 english.log) <(tail -n +2 korean.log)
+          export HOME="$PWD/install-test-home"
+          mkdir -p "$HOME"
+          /usr/bin/hilt -s KJV
+          unset SWORD_PATH
+          /usr/bin/hilt --install KJV
+          /usr/bin/hilt -s KJV
+          /usr/bin/hilt John 3:16 | grep -F 'For God'
       - uses: actions/upload-artifact@v4
         with:
           name: arch-x86_64
@@ -94,6 +101,7 @@ jobs:
             mingw-w64-ucrt-x86_64-ninja
             mingw-w64-ucrt-x86_64-pkgconf
             mingw-w64-ucrt-x86_64-curl
+            mingw-w64-ucrt-x86_64-libarchive
             mingw-w64-ucrt-x86_64-icu
             mingw-w64-ucrt-x86_64-zlib
             mingw-w64-ucrt-x86_64-nsis
@@ -119,6 +127,15 @@ jobs:
           $verse = & $hilt '요' '3:16'
           if ($LASTEXITCODE -ne 0 -or ($verse -join " ") -notmatch ':16\s+.*God') {
             throw "Installed CLI failed to read a Korean reference: $verse"
+          }
+          Remove-Item Env:SWORD_PATH
+          & $hilt -i KJV
+          if ($LASTEXITCODE -ne 0) { throw 'Could not download KJV into Hilt storage' }
+          & $hilt -s KJV
+          if ($LASTEXITCODE -ne 0) { throw 'Could not select the internal module' }
+          $verse = & $hilt 'John' '3:16'
+          if ($LASTEXITCODE -ne 0 -or ($verse -join ' ') -notmatch ':16\s+.*God') {
+            throw "Installed CLI could not query its internal module: $verse"
           }
       - uses: actions/upload-artifact@v4
         with:
