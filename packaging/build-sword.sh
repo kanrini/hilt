@@ -10,6 +10,8 @@ sword_prefix="$PWD/build/sword-prefix"
 sword_install_prefix="$sword_prefix"
 if [[ ${MSYSTEM:-} == UCRT64 ]]; then
     sword_install_prefix="$(cygpath -m "$sword_prefix")"
+    # SWORD 1.9.0 casts pointers to unsigned long, which is 32-bit on Win64.
+    sed -i 's/(unsigned long)datfd > 0/datfd != nullptr/; s/(unsigned long)idxfd > 0/idxfd != nullptr/' "$sword_source/src/modules/common/rawstr4.cpp"
 fi
 sword_options=(
     -DCMAKE_BUILD_TYPE=Release

@@ -2,6 +2,7 @@ name: Build and release Hilt
 
 on:
   push:
+    branches: [main]
     tags:
       - '*'
   workflow_dispatch:
@@ -63,7 +64,11 @@ jobs:
           cd build/package
           runuser -u builder -- env HILT_VERSION="$HILT_VERSION" makepkg --noconfirm
           pacman -U --noconfirm ./*.pkg.tar.zst
-          SWORD_PATH="$PWD/../sword-data" /usr/bin/hilt KJV '요' 3:16 | grep -E ':16 .*God'
+          export SWORD_PATH="$PWD/../sword-data"
+          /usr/bin/hilt KJV John 3:16 | tee english.log
+          /usr/bin/hilt KJV '요' 3:16 | tee korean.log
+          grep -qE ':16 .*God' english.log
+          grep -qE ':16 .*God' korean.log
       - uses: actions/upload-artifact@v4
         with:
           name: arch-x86_64
