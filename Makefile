@@ -1,4 +1,3 @@
-CC = gcc
 CXX = g++
 
 # Fetch SWORD library configuration via pkg-config
@@ -10,7 +9,6 @@ INC_FLAGS = -Iinclude
 
 # Define compiler flags
 # Important: Combine warnings, language standards, library flags, and include paths here.
-CFLAGS = -Wall -Wextra -std=c2x $(SWORD_CFLAGS) $(INC_FLAGS)
 CXXFLAGS = -Wall -Wextra -std=c++17 $(SWORD_CFLAGS) $(INC_FLAGS)
 LDFLAGS = $(SWORD_LIBS)
 
@@ -22,8 +20,8 @@ SRC_DIR = src
 TEST_DIR = tests
 
 # Define object files
-APP_OBJS = $(OBJ_DIR)/main.o $(OBJ_DIR)/bridge.o $(OBJ_DIR)/config.o
-TEST_OBJS = $(OBJ_DIR)/test_bridge.o $(OBJ_DIR)/bridge.o
+APP_OBJS = $(OBJ_DIR)/main.o $(OBJ_DIR)/query.o $(OBJ_DIR)/config.o
+TEST_OBJS = $(OBJ_DIR)/test_query.o $(OBJ_DIR)/query.o
 
 # Default target
 all: $(TARGET)
@@ -40,21 +38,21 @@ $(TEST_TARGET): $(TEST_OBJS)
 	$(CXX) $(TEST_OBJS) -o $@ $(LDFLAGS)
 
 # Compilation rules
-$(OBJ_DIR)/main.o: $(SRC_DIR)/main.c
-	@mkdir -p $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(OBJ_DIR)/bridge.o: $(SRC_DIR)/bridge.cpp
+$(OBJ_DIR)/main.o: $(SRC_DIR)/main.cpp include/config.h include/query.h
 	@mkdir -p $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(OBJ_DIR)/config.o: $(SRC_DIR)/config.c
+$(OBJ_DIR)/query.o: $(SRC_DIR)/query.cpp include/query.h
 	@mkdir -p $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(OBJ_DIR)/test_bridge.o: $(TEST_DIR)/test_bridge.c
+$(OBJ_DIR)/config.o: $(SRC_DIR)/config.cpp include/config.h
 	@mkdir -p $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/test_query.o: $(TEST_DIR)/test_query.cpp include/query.h
+	@mkdir -p $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
 	rm -rf $(OBJ_DIR) $(TARGET) $(TEST_TARGET)

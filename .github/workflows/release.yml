@@ -1,0 +1,145 @@
+name: Build and release Hilt
+
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      value: ${{ steps.version.outputs.value }}
+    steps:
+      - id: version
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+        run: |
+          version=0.0.0
+          if [[ "$REF_TYPE" == tag ]]; then
+            version="${REF_NAME#v}"
+            [[ "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || {
+              echo "::error::Use a release tag such as 1.1.0 or v1.1.0"
+              exit 1
+            }
+          fi
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+
+  arch:
+    needs: version
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    env:
+      HILT_VERSION: ${{ needs.version.outputs.value }}
+    steps:
+      - run: pacman -Syu --noconfirm --needed git cmake ninja icu zlib curl unzip
+      - uses: actions/checkout@v4
+      - name: Build, test and package
+        shell: bash
+        run: |
+          set -euo pipefail
+          source packaging/build-sword.sh
+          export PKG_CONFIG_PATH="$sword_prefix/lib/pkgconfig"
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DHILT_BUNDLED_SWORD=ON
+          cmake --build build
+          curl --fail --location --retry 3 https://crosswire.org/ftpmirror/pub/sword/packages/rawzip/KJV.zip -o build/KJV.zip
+          mkdir -p build/sword-data
+          unzip -q build/KJV.zip -d build/sword-data
+          SWORD_PATH="$PWD/build/sword-data" ctest --test-dir build --output-on-failure
+          install -Dm755 build/hilt build/package/hilt
+          mkdir -p build/package/sword
+          cp -a "$sword_prefix"/lib/libsword.so* build/package/sword/
+          cp -a "$sword_source/locales.d" build/package/sword/
+          cp "$sword_source/LICENSE" build/package/sword/LICENSE
+          cp "$archive" build/package/sword/
+          install -m644 LICENSE packaging/arch/PKGBUILD build/package/
+          useradd -m builder
+          chown -R builder:builder build/package
+          cd build/package
+          runuser -u builder -- env HILT_VERSION="$HILT_VERSION" makepkg --noconfirm
+          pacman -U --noconfirm ./*.pkg.tar.zst
+          SWORD_PATH="$PWD/../sword-data" /usr/bin/hilt KJV '요' 3:16 | grep -E ':16 .*God'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: arch-x86_64
+          path: build/package/*.pkg.tar.zst
+          if-no-files-found: error
+
+  windows:
+    needs: version
+    runs-on: windows-latest
+    env:
+      HILT_VERSION: ${{ needs.version.outputs.value }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-pkgconf
+            mingw-w64-ucrt-x86_64-icu
+            mingw-w64-ucrt-x86_64-zlib
+            mingw-w64-ucrt-x86_64-nsis
+            curl
+            unzip
+      - name: Build and package Windows installer
+        shell: msys2 {0}
+        run: bash packaging/windows/build.sh
+      - name: Test installed CLI outside MSYS2
+        shell: pwsh
+        run: |
+          $installer = Get-Item "build/release/hilt-$env:HILT_VERSION-windows-x86_64-setup.exe"
+          $destination = Join-Path $env:RUNNER_TEMP 'Hilt Smoke Test'
+          $process = Start-Process $installer.FullName -ArgumentList '/S', "/D=$destination" -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw "Installer failed with exit code $($process.ExitCode)" }
+          $env:SWORD_PATH = (Resolve-Path build/sword-data).Path
+          [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
+          $env:USERPROFILE = $env:RUNNER_TEMP
+          Remove-Item Env:HOME -ErrorAction SilentlyContinue
+          $hilt = Join-Path $destination 'bin/hilt.exe'
+          & $hilt -s KJV
+          if ($LASTEXITCODE -ne 0) { throw 'Could not save the default module' }
+          $verse = & $hilt '요' '3:16'
+          if ($LASTEXITCODE -ne 0 -or ($verse -join " ") -notmatch ':16 .*God') {
+            throw "Installed CLI failed to read a Korean reference: $verse"
+          }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-x86_64
+          path: build/release/*-setup.exe
+          if-no-files-found: error
+
+  release:
+    if: github.ref_type == 'tag' && github.event_name == 'push'
+    needs: [arch, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+      - name: Publish both installers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          assets=(release/*.pkg.tar.zst release/*-setup.exe)
+          (cd release && sha256sum *.pkg.tar.zst *-setup.exe > SHA256SUMS)
+          assets+=(release/SHA256SUMS)
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${assets[@]}" --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$TAG" "${assets[@]}" --verify-tag --generate-notes --repo "$GITHUB_REPOSITORY"
+          fi

@@ -1,0 +1,19 @@
+pkgname=hilt
+pkgver=${HILT_VERSION:-1.0.0}
+pkgrel=1
+pkgdesc='Command-line Bible reader based on CrossWire SWORD'
+arch=('x86_64')
+url='https://github.com/kanrini/hilt'
+license=('MIT' 'GPL-2.0-only')
+depends=('icu' 'zlib' 'gcc-libs' 'glibc')
+
+package() {
+    install -d "$pkgdir/usr/lib/hilt" "$pkgdir/usr/share/hilt"
+    cp -a "$startdir"/sword/libsword.so* "$pkgdir/usr/lib/hilt/"
+    cp -a "$startdir/sword/locales.d" "$pkgdir/usr/share/hilt/"
+    install -Dm644 "$startdir/sword/LICENSE" "$pkgdir/usr/share/licenses/hilt/SWORD"
+    install -d "$pkgdir/usr/share/hilt/source"
+    install -m644 "$startdir"/sword/sword-*.tar.gz "$pkgdir/usr/share/hilt/source/"
+    install -Dm755 "$startdir/hilt" "$pkgdir/usr/bin/hilt"
+    install -Dm644 "$startdir/LICENSE" "$pkgdir/usr/share/licenses/hilt/LICENSE"
+}

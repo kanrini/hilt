@@ -1,10 +1,7 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+#pragma once
 
-// Save the default module name to a file
-int save_default_module(const char *module_name);
+#include <optional>
+#include <string>
 
-// Load the default module name from the file (Returned memory must be freed)
-char *load_default_module();
-
-#endif
+bool save_default_module(const char* module_name);
+std::optional<std::string> load_default_module();
