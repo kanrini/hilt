@@ -8,7 +8,9 @@ tar --exclude="sword-$version/bindings/Android" -xf "$archive" -C build
 sword_source="$PWD/build/sword-$version"
 sword_prefix="$PWD/build/sword-prefix"
 sword_install_prefix="$sword_prefix"
-if [[ ${MSYSTEM:-} == UCRT64 ]]; then
+sword_no_curl=Yes
+if [[  == UCRT64 ]]; then
+    sword_no_curl=No
     sword_install_prefix="$(cygpath -m "$sword_prefix")"
     # SWORD 1.9.0 casts pointers to unsigned long, which is 32-bit on Win64.
     for filter in "$sword_source"/src/modules/filters/*.cpp; do
@@ -29,7 +31,7 @@ sword_options=(
     "-DCMAKE_INSTALL_PREFIX=$sword_install_prefix"
     -DLIBSWORD_LIBRARY_TYPE=Shared
     -DSWORD_BUILD_UTILS=No
-    -DSWORD_NO_CURL=Yes
+    "-DSWORD_NO_CURL=$sword_no_curl"
     -DSWORD_NO_CLUCENE=Yes
 )
 cmake -S "$sword_source" -B build/sword-build -G Ninja "${sword_options[@]}"
