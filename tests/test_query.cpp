@@ -42,5 +42,22 @@ int main() {
         return EXIT_FAILURE;
     }
 
+    if (auto* korrv = manager.getModule("KorRV")) {
+        for (const char* reference : {"Rev 13:1", "Rev 13:"}) {
+            auto result = parse_reference(korrv, reference);
+            if (!result || result->popError()) {
+                std::cerr << "Could not parse KorRV " << reference << ".\n";
+                return EXIT_FAILURE;
+            }
+            korrv->setKey(*result);
+            const auto* key = dynamic_cast<const sword::VerseKey*>(korrv->getKey());
+            if (!key || key->getChapter() != 13 || key->getVerse() != 1 ||
+                std::string_view(korrv->stripText()).find_first_not_of(" \t\r\n") == std::string_view::npos) {
+                std::cerr << "Expected the first verse of KorRV Revelation 13 for " << reference << ".\n";
+                return EXIT_FAILURE;
+            }
+        }
+    }
+
     std::cout << "All tests passed.\n";
 }

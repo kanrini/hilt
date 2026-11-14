@@ -51,6 +51,8 @@ jobs:
           curl --fail --location --retry 3 https://crosswire.org/ftpmirror/pub/sword/packages/rawzip/KJV.zip -o build/KJV.zip
           mkdir -p build/sword-data
           unzip -q build/KJV.zip -d build/sword-data
+          curl --fail --location --retry 3 https://crosswire.org/ftpmirror/pub/sword/packages/rawzip/KorRV.zip -o build/KorRV.zip
+          unzip -oq build/KorRV.zip -d build/sword-data
           SWORD_PATH="$PWD/build/sword-data" ctest --test-dir build --output-on-failure
           install -Dm755 build/hilt build/package/hilt
           mkdir -p build/package/sword

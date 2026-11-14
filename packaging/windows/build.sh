@@ -18,5 +18,7 @@ cmake --build build/hilt
 curl --fail --location --retry 3 https://crosswire.org/ftpmirror/pub/sword/packages/rawzip/KJV.zip -o build/KJV.zip
 mkdir -p build/sword-data
 unzip -oq build/KJV.zip -d build/sword-data
+curl --fail --location --retry 3 https://crosswire.org/ftpmirror/pub/sword/packages/rawzip/KorRV.zip -o build/KorRV.zip
+unzip -oq build/KorRV.zip -d build/sword-data
 SWORD_PATH="$(cygpath -m "$PWD/build/sword-data")" ctest --test-dir build/hilt --output-on-failure
 cpack --config build/hilt/CPackConfig.cmake -B build/release
