@@ -35,6 +35,9 @@ sword_options=(
     "-DSWORD_NO_CURL=$sword_no_curl"
     -DSWORD_NO_CLUCENE=Yes
 )
+if [[ ${MSYSTEM:-} == UCRT64 ]]; then
+    sword_options+=("-DCURL_LIBRARY=$(cygpath -m "$MINGW_PREFIX/lib/libcurl.dll.a")")
+fi
 cmake -S "$sword_source" -B build/sword-build -G Ninja "${sword_options[@]}"
 cmake --build build/sword-build
 cmake --install build/sword-build
