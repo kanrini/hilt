@@ -7,7 +7,7 @@
 #include <string_view>
 
 #if defined(_WIN32) || defined(HILT_LOCALE_DIR)
-#include <sword/localemgr.h>
+#include <localemgr.h>
 #endif
 
 #ifdef _WIN32

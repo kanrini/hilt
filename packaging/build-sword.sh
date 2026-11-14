@@ -3,7 +3,7 @@ archive="build/sword-$version.tar.gz"
 mkdir -p build
 curl --fail --location --retry 3 "https://crosswire.org/ftpmirror/pub/sword/source/v1.9/sword-$version.tar.gz" -o "$archive"
 echo "42409cf3de2faf1108523e2c5ac0745d21f9ed2a5c78ed878ee9dcc303426b8a  $archive" | sha256sum -c -
-tar -xf "$archive" -C build
+tar --exclude="sword-$version/bindings/Android" -xf "$archive" -C build
 
 sword_source="$PWD/build/sword-$version"
 sword_prefix="$PWD/build/sword-prefix"
